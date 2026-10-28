@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test and Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Go Vet
+        run: go vet ./...
+
+      - name: Run Tests
+        run: go test -v -cover ./...
+
+      - name: Cross-compile Smoke Test (macOS arm64)
+        run: GOOS=darwin GOARCH=arm64 go build -o /dev/null main.go
+
+      - name: Cross-compile Smoke Test (Linux amd64)
+        run: GOOS=linux GOARCH=amd64 go build -o /dev/null main.go

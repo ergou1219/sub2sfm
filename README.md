@@ -1,5 +1,8 @@
 # sub2sfm: 机场订阅转 Sing-box (SFM) 转换器
 
+[![CI](https://github.com/ergou1219/sub2sfm/actions/workflows/ci.yml/badge.svg)](https://github.com/ergou1219/sub2sfm/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 专为 macOS 上的 SFM (Sing-box for Mac) 优化的轻量订阅转换服务。彻底解决 SSH 频繁断连、DNS 泄漏与 WebRTC 暴露问题。原生支持 Trojan、VLESS (Reality)、Hysteria 2、Shadowsocks 与 VMess。
 
 ## 核心特性
@@ -37,7 +40,12 @@ go build -o sub2sfm main.go
 
 ### 2. 容器化运行 (Docker & Docker Compose)
 
-**使用 Docker Compose 启动（推荐）：**
+**从 GHCR 直接拉取运行预编译镜像（推荐）：**
+```bash
+docker run -d --name sub2sfm -p 8080:8080 ghcr.io/ergou1219/sub2sfm:latest
+```
+
+**使用 Docker Compose 启动：**
 ```bash
 docker compose up -d
 ```
