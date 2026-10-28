@@ -58,7 +58,7 @@ The service follows a pipe-and-filter conversion pipeline:
 
 ```bash
 # Run locally from source
-go run main.go -port 8080
+go run main.go -port 8088
 
 # Run all unit tests
 go test ./...
@@ -130,7 +130,7 @@ docker compose up -d --build
 | `pkg/builder/dns.go` | Sing-box 1.12+ DNS hierarchy, anti-leak rule sequencing, and Type 65 blocking. |
 | `pkg/builder/outbounds.go` | System selectors generation, tag deduplication, and protocol outbound generators. |
 | `pkg/builder/route.go` | Sniffing, DNS hijack, STUN leak blocking, presets (`geek`, `standard`, `global`), custom rule DSL, and remote rule-sets. |
-| `Dockerfile` & `compose.yml` | Multi-stage scratch/Alpine build, non-root execution (`nobody:nobody`), port 8080. |
+| `Dockerfile` & `compose.yml` | Multi-stage scratch/Alpine build, non-root execution (`nobody:nobody`), port 8088. |
 
 ## Runtime/Tooling Preferences
 
@@ -139,7 +139,7 @@ docker compose up -d --build
 - **Binary Footprint**: Compile statically with `CGO_ENABLED=0`, `-trimpath`, and `-ldflags "-w -s"`.
 - **Static Assets**: Embedded at compile time via `//go:embed static/index.html` in `pkg/server/handler.go`. No Node.js, Bun, npm, or frontend bundlers needed.
 - **Logging**: Standard library `log/slog` outputting structured plain text to `os.Stdout`.
-- **Container Environment**: Runs on Alpine as `USER nobody` with exposed port `8080`.
+- **Container Environment**: Runs on Alpine as `USER nobody` with exposed port `8088`.
 
 ## Testing & QA
 

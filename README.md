@@ -36,7 +36,7 @@
 docker run -d \
   --name sub2sfm \
   --restart unless-stopped \
-  -p 8080:8080 \
+  -p 8088:8088 \
   ghcr.io/ergou1219/sub2sfm:latest
 ```
 
@@ -49,35 +49,35 @@ docker compose up -d
 
 前往 [Releases 页面](https://github.com/ergou1219/sub2sfm/releases) 下载对应系统平台的压缩包（macOS Apple Silicon / Intel、Linux x86_64 / arm64），解压后直接启动：
 ```bash
-./sub2sfm -port 8080
+./sub2sfm -port 8088
 ```
 
 ### 方式三：源码编译运行（开发者）
 
 本地需要安装 Go 1.23+ 环境：
 ```bash
-go run main.go -port 8080
+go run main.go -port 8088
 ```
 或编译为单可执行二进制：
 ```bash
 go build -o sub2sfm main.go
-./sub2sfm -port 8080
+./sub2sfm -port 8088
 ```
 
-> 提示：服务默认监听 `0.0.0.0:8080`，可通过设置 `HOST` 与 `PORT` 环境变量或启动参数自定义监听地址。
+> 提示：服务默认监听 `0.0.0.0:8088`，可通过设置 `HOST` 与 `PORT` 环境变量或启动参数自定义监听地址。
 
 ---
 
 ## 3 步快速配置 SFM 订阅
 
-1. **打开 Web 界面**：浏览器访问 `http://127.0.0.1:8080`（VPS 部署请使用服务器公网 IP 或域名）。
+1. **打开 Web 界面**：浏览器访问 `http://127.0.0.1:8088`（VPS 部署请使用服务器公网 IP 或域名）。
 2. **生成订阅**：粘贴原机场订阅链接，分流预设推荐保持 `Geek (极客默认)`。
 3. **一键导入 SFM**：点击「一键导入 SFM」直接唤起 macOS 客户端；或点击「复制订阅」在 SFM 中手动添加配置。
 
 ## API 参数说明
 订阅地址示例：
 ```
-http://127.0.0.1:8080/sub?sub=https://airport.com/subscribe&preset=geek&ssh=direct&rules=domain:myvps.com=direct,port:2222=SSH出口,geosite:netflix=proxy
+http://127.0.0.1:8088/sub?sub=https://airport.com/subscribe&preset=geek&ssh=direct&rules=domain:myvps.com=direct,port:2222=SSH出口,geosite:netflix=proxy
 ```
 - `sub` / `url`：原机场订阅链接（支持 Clash YAML、Base64，以及 `trojan://`、`vless://`、`hysteria2://` / `hy2://`、`ss://` 等链接）。
 - `preset`：分流预设，可选 `geek`（默认分流，含 OpenAI/GitHub/国内直连）、`standard`（轻量分流）、`global`（全局代理）。

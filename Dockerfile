@@ -23,6 +23,6 @@ WORKDIR /app
 
 COPY --from=builder /build/sub2sfm /app/sub2sfm
 
-EXPOSE 8080
+EXPOSE 8088
 
 ENTRYPOINT ["/app/sub2sfm"]

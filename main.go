@@ -23,7 +23,7 @@ func getEnv(key, fallback string) string {
 
 func main() {
 	host := flag.String("host", getEnv("HOST", "0.0.0.0"), "HTTP 监听主机地址 (亦可通过 HOST 环境变量设置)")
-	port := flag.String("port", getEnv("PORT", "8080"), "HTTP 监听端口 (亦可通过 PORT 环境变量设置)")
+	port := flag.String("port", getEnv("PORT", "8088"), "HTTP 监听端口 (亦可通过 PORT 环境变量设置)")
 	flag.Parse()
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,

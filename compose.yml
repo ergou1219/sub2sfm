@@ -5,7 +5,7 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8088:8088"
     environment:
       - TZ=Asia/Shanghai
     ulimits:
