@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>sub2sfm · 机场订阅转 Sing-box</title>
+  <style>
+    :root {
+      --ink: #1c1917;
+      --ink-soft: #6f675e;
+      --paper: #efeae2;
+      --card: #fbf8f3;
+      --line: #e3dacd;
+      --field: #fff;
+      --field-line: #d8cfc2;
+      --rust: #9a3b1b;
+      --rust-hover: #7d3016;
+      --cream: #f6f1e8;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.5;
+      padding: 40px 20px 64px;
+    }
+    .main {
+      width: min(760px, 100%);
+      margin: 0 auto;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+    }
+    .block {
+      padding: 22px 24px;
+    }
+    .block + .block {
+      border-top: 1px solid var(--line);
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 0.78rem;
+      font-weight: 650;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    label.field-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.92rem;
+      font-weight: 650;
+    }
+    .hint {
+      margin: 8px 0 0;
+      color: var(--ink-soft);
+      font-size: 0.8rem;
+    }
+    input[type="text"], select {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--field);
+      border: 1px solid var(--field-line);
+      border-radius: 10px;
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.95rem;
+    }
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236f675e' d='M1 1.5 6 6.5 11 1.5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+    input[type="text"]:focus, select:focus {
+      outline: 2px solid var(--ink);
+      outline-offset: 2px;
+    }
+    .rule-lead { margin: 0 0 14px; }
+    .rule-row {
+      display: grid;
+      grid-template-columns: minmax(9.5rem, 1.15fr) minmax(0, 1.6fr) minmax(6.5rem, 0.8fr) auto;
+      gap: 8px;
+      align-items: start;
+      margin-bottom: 10px;
+    }
+    .rule-row > button { min-height: 46px; }
+    .rule-error {
+      grid-column: 1 / -1;
+      margin: 0;
+      color: var(--rust);
+      font-size: 0.78rem;
+    }
+    .rule-error[hidden] { display: none; }
+    #addRuleBtn { margin-top: 4px; }
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .choices label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.88rem;
+      font-weight: 650;
+    }
+    .choice-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .choice-label label { margin-bottom: 0; }
+    .choice:has(.tip-btn:hover),
+    .choice:has(.tip-btn:focus) {
+      position: relative;
+      z-index: 1;
+    }
+    .toggles {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--field-line);
+      border-radius: 12px;
+      background: var(--field);
+    }
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 16px;
+    }
+    .toggle + .toggle {
+      border-top: 1px solid var(--line);
+    }
+    .toggle-title {
+      cursor: pointer;
+      font-weight: 650;
+      font-size: 0.92rem;
+    }
+    .toggle .tip-btn { margin-right: auto; }
+    button.tip-btn {
+      position: relative;
+      flex: none;
+      width: 18px;
+      height: 18px;
+      min-height: 0;
+      padding: 0;
+      border: 1px solid var(--field-line);
+      border-radius: 50%;
+      background: transparent;
+      color: var(--ink-soft);
+      font-size: 12px;
+      line-height: 1;
+      cursor: help;
+    }
+    button.tip-btn:hover,
+    button.tip-btn:focus-visible {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+    .tip-text {
+      position: absolute;
+      left: calc(100% + 8px);
+      top: 50%;
+      z-index: 2;
+      width: max-content;
+      max-width: min(240px, 42vw);
+      transform: translateY(-50%);
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: var(--ink);
+      color: var(--cream);
+      font-size: 0.78rem;
+      font-weight: 450;
+      line-height: 1.45;
+      text-align: left;
+      white-space: normal;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    button.tip-btn:hover .tip-text,
+    button.tip-btn:focus .tip-text {
+      visibility: visible;
+    }
+    @media (max-width: 860px) {
+      .toggle:has(.tip-btn:hover),
+      .toggle:has(.tip-btn:focus-visible) { padding-bottom: 58px; }
+      .choice:has(.tip-btn:hover) .choice-label,
+      .choice:has(.tip-btn:focus-visible) .choice-label { margin-bottom: 72px; }
+      .tip-text {
+        left: 0;
+        top: calc(100% + 8px);
+        bottom: auto;
+        transform: none;
+        max-width: calc(100vw - 88px);
+      }
+    }
+    .toggle:hover,
+    .toggle:focus-within {
+      position: relative;
+      z-index: 1;
+    }
+    .switch {
+      position: relative;
+      width: 42px;
+      height: 26px;
+      flex: none;
+    }
+    .switch input {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .switch-track {
+      display: block;
+      width: 42px;
+      height: 26px;
+      border-radius: 999px;
+      background: #d7cec2;
+      position: relative;
+    }
+    .switch-track::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+      transition: transform 0.15s ease;
+    }
+    .switch input:checked + .switch-track {
+      background: var(--ink);
+    }
+    .switch input:checked + .switch-track::after {
+      transform: translateX(16px);
+    }
+    .switch input:focus-visible + .switch-track {
+      outline: 2px solid var(--rust);
+      outline-offset: 3px;
+    }
+    .url-box {
+      margin: 0 0 14px;
+      padding: 14px;
+      min-height: 72px;
+      max-height: 140px;
+      overflow: auto;
+      border-radius: 10px;
+      background: #f3eee6;
+      border: 1px dashed #d2c8b8;
+      color: var(--ink);
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .url-box.is-empty {
+      color: var(--ink-soft);
+      font-family: inherit;
+      font-size: 0.92rem;
+    }
+    .meta {
+      margin: -4px 0 14px;
+      color: var(--ink-soft);
+      font-size: 0.8rem;
+    }
+    .meta:empty { display: none; }
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    button, .btn-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 16px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 650;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    button:disabled, .btn-link[aria-disabled="true"] {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .btn-primary {
+      background: var(--ink);
+      color: var(--cream);
+    }
+    .btn-primary:hover:not(:disabled) { background: #3a342c; }
+    .btn-rust {
+      background: var(--rust);
+      color: #fff;
+    }
+    .btn-rust:hover { background: var(--rust-hover); }
+    .btn-ghost {
+      background: transparent;
+      border-color: var(--field-line);
+      color: var(--ink);
+    }
+    .btn-ghost:hover { background: #fff; }
+    .btn-link:focus-visible, button:focus-visible {
+      outline: 2px solid var(--rust);
+      outline-offset: 2px;
+    }
+    @media (max-width: 860px) {
+      body { padding: 16px 16px 40px; }
+      .choices { grid-template-columns: 1fr; }
+      .block { padding: 18px 16px; }
+      .rule-row { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .switch-track::after { transition: none; }
+    }
+  </style>
+</head>
+<body>
+    <main class="main">
+      <div class="panel">
+        <section class="block">
+          <h2>订阅</h2>
+          <label class="field-label" for="subUrl">机场订阅链接</label>
+          <input type="text" id="subUrl" spellcheck="false" autocomplete="off" placeholder="https://airport.example/subscribe 或节点链接" />
+          <p class="hint">支持 Clash YAML、Base64 订阅，或 Trojan、VLESS、Hysteria 2、SS 等节点链接。</p>
+        </section>
+
+        <section class="block">
+          <h2>策略</h2>
+          <div class="choices">
+            <div class="choice">
+              <div class="choice-label">
+                <label for="preset">分流</label>
+                <button type="button" class="tip-btn" aria-label="默认分流含 AI、GitHub 与国内直连。标准只区分国内直连和境外代理。全局把流量都送去代理。">
+                  <span aria-hidden="true">?</span>
+                  <span class="tip-text" aria-hidden="true">默认分流含 AI、GitHub 与国内直连。标准只区分国内直连和境外代理。全局把流量都送去代理。</span>
+                </button>
+              </div>
+              <select id="preset">
+                <option value="geek" selected>默认分流</option>
+                <option value="standard">标准分流</option>
+                <option value="global">全局代理</option>
+              </select>
+            </div>
+            <div>
+              <label for="sshMode">SSH 出口</label>
+              <select id="sshMode">
+                <option value="direct" selected>直连</option>
+                <option value="proxy">走代理</option>
+              </select>
+            </div>
+            <div>
+              <label for="webrtcMode">WebRTC</label>
+              <select id="webrtcMode">
+                <option value="block" selected>拦截</option>
+                <option value="direct">直连</option>
+                <option value="proxy">走代理</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="block">
+          <h2>规则</h2>
+          <p class="hint rule-lead">想让某个网站直连、走代理、拦截，或走 SSH 出口，加一条。网站列表和 IP 列表用 SagerNet 的名字，例如 netflix、us。这些规则比默认分流先匹配。</p>
+          <div id="ruleList"></div>
+          <button type="button" class="btn-ghost" id="addRuleBtn">再加一条</button>
+        </section>
+
+        <section class="block">
+          <h2>开关</h2>
+          <div class="toggles">
+            <div class="toggle">
+              <label class="toggle-title" for="allowInsecure">允许不安全证书</label>
+              <button type="button" class="tip-btn" aria-label="节点证书过期或自签名时仍然连接。">
+                <span aria-hidden="true">?</span>
+                <span class="tip-text" aria-hidden="true">节点证书过期或自签名时仍然连接。</span>
+              </button>
+              <label class="switch" for="allowInsecure">
+                <input type="checkbox" id="allowInsecure" />
+                <span class="switch-track"></span>
+              </label>
+            </div>
+            <div class="toggle">
+              <label class="toggle-title" for="ipv6Off">关闭 IPv6</label>
+              <button type="button" class="tip-btn" aria-label="本机没有可用 IPv6 时保持打开。">
+                <span aria-hidden="true">?</span>
+                <span class="tip-text" aria-hidden="true">本机没有可用 IPv6 时保持打开。</span>
+              </button>
+              <label class="switch" for="ipv6Off">
+                <input type="checkbox" id="ipv6Off" checked />
+                <span class="switch-track"></span>
+              </label>
+            </div>
+            <div class="toggle">
+              <label class="toggle-title" for="ruleCdn">规则走 CDN (jsDelivr)</label>
+              <button type="button" class="tip-btn" aria-label="无法访问 GitHub 时打开，规则集改走 jsDelivr CDN 下载。">
+                <span aria-hidden="true">?</span>
+                <span class="tip-text" aria-hidden="true">无法访问 GitHub 时打开，规则集改走 jsDelivr CDN 下载。</span>
+              </button>
+              <label class="switch" for="ruleCdn">
+                <input type="checkbox" id="ruleCdn" />
+                <span class="switch-track"></span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="block">
+          <h2>结果</h2>
+          <p class="url-box is-empty" id="outputUrl">请输入机场订阅地址生成专属链接</p>
+          <p class="meta" id="summary"></p>
+          <div class="btn-group">
+            <button class="btn-primary" type="button" id="copyBtn" disabled>复制链接</button>
+            <a class="btn-link btn-rust" id="importBtn" href="#" aria-disabled="true">导入 SFM</a>
+            <a class="btn-link btn-ghost" id="downloadBtn" href="#" download="singbox-config.json" aria-disabled="true">下载 JSON</a>
+          </div>
+        </section>
+      </div>
+    </main>
+
+  <script>
+    const subUrlInput = document.getElementById('subUrl');
+    const presetSelect = document.getElementById('preset');
+    const sshModeSelect = document.getElementById('sshMode');
+    const webrtcModeSelect = document.getElementById('webrtcMode');
+    const ruleList = document.getElementById('ruleList');
+    const addRuleBtn = document.getElementById('addRuleBtn');
+    const allowInsecureInput = document.getElementById('allowInsecure');
+    const ipv6OffInput = document.getElementById('ipv6Off');
+    const ruleCdnInput = document.getElementById('ruleCdn');
+    const outputArea = document.getElementById('outputUrl');
+    const summary = document.getElementById('summary');
+    const copyBtn = document.getElementById('copyBtn');
+    const importBtn = document.getElementById('importBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    const presetNames = { geek: '默认分流', standard: '标准分流', global: '全局代理' };
+    const sshNames = { direct: 'SSH 直连', proxy: 'SSH 代理' };
+    const rtcNames = { block: 'WebRTC 拦截', direct: 'WebRTC 直连', proxy: 'WebRTC 代理' };
+    const matchOptions = [
+      ['suffix', '网站（含子域名）', 'example.com'],
+      ['domain', '仅这个地址', 'www.example.com'],
+      ['keyword', '名称包含', 'google'],
+      ['ip', 'IP', '1.2.3.4'],
+      ['port', '端口', '443'],
+      ['geosite', '网站列表', 'netflix'],
+      ['geoip', 'IP 列表', 'us']
+    ];
+    const actionOptions = [
+      ['direct', '直连'],
+      ['proxy', '走代理'],
+      ['block', '拦截'],
+      ['SSH出口', 'SSH 出口']
+    ];
+    let ruleSeq = 0;
+
+    function normalizeSite(raw) {
+      const value = raw.trim();
+      if (/^[a-z][a-z0-9+.-]*:\/\//i.test(value)) {
+        try {
+          const host = new URL(value).hostname;
+          if (host) return host;
+        } catch (err) { /* 不是合法网址时按原文处理 */ }
+      }
+      return value.split(/[/?#]/)[0].replace(/:\d+$/, '');
+    }
+
+    function isIpv4(addr) {
+      const parts = addr.split('.');
+      if (parts.length !== 4) return false;
+      return parts.every((part) => /^\d{1,3}$/.test(part) && String(Number(part)) === part && Number(part) <= 255);
+    }
+
+    function isIpv6(addr) {
+      if (!addr || addr.includes('%')) return false;
+      try {
+        return new URL('http://[' + addr + ']').hostname.startsWith('[');
+      } catch (err) {
+        return false;
+      }
+    }
+
+    function isIpCidr(value) {
+      const cut = value.split('/');
+      if (cut.length > 2) return false;
+      const addr = cut[0];
+      const prefix = cut[1];
+      let maxBits = 128;
+      if (addr.includes(':')) {
+        if (!isIpv6(addr)) return false;
+      } else if (isIpv4(addr)) {
+        maxBits = 32;
+      } else {
+        return false;
+      }
+      if (prefix === undefined) return true;
+      return /^\d{1,3}$/.test(prefix) && Number(prefix) <= maxBits;
+    }
+
+    function addRuleRow() {
+      const row = document.createElement('div');
+      row.className = 'rule-row';
+
+      const type = document.createElement('select');
+      type.className = 'rule-type';
+      type.setAttribute('aria-label', '匹配方式');
+      for (const [value, label] of matchOptions) {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = label;
+        type.appendChild(opt);
+      }
+
+      const value = document.createElement('input');
+      value.type = 'text';
+      value.className = 'rule-value';
+      value.spellcheck = false;
+      value.autocomplete = 'off';
+      value.placeholder = matchOptions[0][2];
+      value.setAttribute('aria-label', '匹配内容');
+
+      const action = document.createElement('select');
+      action.className = 'rule-action';
+      action.setAttribute('aria-label', '怎么走');
+      for (const [itemValue, label] of actionOptions) {
+        const opt = document.createElement('option');
+        opt.value = itemValue;
+        opt.textContent = label;
+        action.appendChild(opt);
+      }
+
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'btn-ghost';
+      remove.textContent = '删除';
+
+      const error = document.createElement('p');
+      error.className = 'rule-error';
+      error.id = 'rule-error-' + ruleSeq++;
+      error.setAttribute('aria-live', 'polite');
+      error.hidden = true;
+
+      type.addEventListener('change', () => {
+        const found = matchOptions.find((item) => item[0] === type.value);
+        value.placeholder = found ? found[2] : '';
+        updateUrl();
+      });
+      value.addEventListener('input', updateUrl);
+      action.addEventListener('change', updateUrl);
+      remove.addEventListener('click', () => {
+        row.remove();
+        updateUrl();
+      });
+
+      row.append(type, value, action, remove, error);
+      ruleList.appendChild(row);
+    }
+
+    function renderRuleErrors(errors) {
+      for (const item of errors) {
+        const error = item.row.querySelector('.rule-error');
+        const input = item.row.querySelector('.rule-value');
+        if (item.message) {
+          error.hidden = false;
+          error.textContent = item.message;
+          input.setAttribute('aria-invalid', 'true');
+          input.setAttribute('aria-describedby', error.id);
+        } else {
+          error.hidden = true;
+          error.textContent = '';
+          input.removeAttribute('aria-invalid');
+          input.removeAttribute('aria-describedby');
+        }
+      }
+    }
+
+    function collectRules() {
+      const rules = [];
+      const errors = [];
+      for (const row of ruleList.querySelectorAll('.rule-row')) {
+        const type = row.querySelector('.rule-type').value;
+        let value = row.querySelector('.rule-value').value.trim();
+        const action = row.querySelector('.rule-action').value;
+        if (!value) {
+          errors.push({ row, message: '' });
+          continue;
+        }
+        if (type === 'domain' || type === 'suffix') {
+          value = normalizeSite(value);
+        }
+        if (type === 'geosite' || type === 'geoip') {
+          value = value.toLowerCase();
+        }
+        let message = '';
+        if (type === 'port' && (!/^\d+$/.test(value) || Number(value) < 1 || Number(value) > 65535)) {
+          message = '端口要填 1-65535 的数字';
+        } else if (type === 'ip' && !isIpCidr(value)) {
+          message = 'IP 格式不正确';
+        } else if ((type === 'geosite' || type === 'geoip') && !/^[a-z0-9][a-z0-9@!-]{0,63}$/.test(value)) {
+          message = '名称只能是字母、数字、-、!、@，例如 netflix';
+        } else if (!value || /[,;\n=]/.test(value)) {
+          message = '内容里不能有逗号或等号';
+        }
+        if (message) {
+          errors.push({ row, message });
+          continue;
+        }
+        errors.push({ row, message: '' });
+        rules.push(type + ':' + value + '=' + action);
+      }
+      return { rules, errors, errorCount: errors.filter((item) => item.message).length };
+    }
+
+    function setActions(on) {
+      copyBtn.disabled = !on;
+      for (const link of [importBtn, downloadBtn]) {
+        link.setAttribute('aria-disabled', on ? 'false' : 'true');
+        link.tabIndex = on ? 0 : -1;
+      }
+    }
+
+    function updateUrl() {
+      const collected = collectRules();
+      renderRuleErrors(collected.errors);
+      const rules = collected.rules;
+      const sub = subUrlInput.value.trim();
+      if (!sub) {
+        outputArea.textContent = '请输入机场订阅地址生成专属链接';
+        outputArea.classList.add('is-empty');
+        summary.textContent = '';
+        importBtn.href = '#';
+        downloadBtn.href = '#';
+        setActions(false);
+        return '';
+      }
+
+      const params = new URLSearchParams();
+      params.set('sub', sub);
+      if (presetSelect.value !== 'geek') params.set('preset', presetSelect.value);
+      if (sshModeSelect.value !== 'direct') params.set('ssh', sshModeSelect.value);
+      if (webrtcModeSelect.value !== 'block') params.set('webrtc', webrtcModeSelect.value);
+      if (rules.length) params.set('rules', rules.join(','));
+      if (allowInsecureInput.checked) params.set('insecure', 'true');
+      params.set('ipv6', ipv6OffInput.checked ? 'off' : 'on');
+      if (ruleCdnInput.checked) params.set('cdn', 'true');
+
+      const generated = window.location.origin + '/sub?' + params.toString();
+      outputArea.textContent = generated;
+      outputArea.classList.remove('is-empty');
+      const bits = [
+        presetNames[presetSelect.value] || presetSelect.value,
+        sshNames[sshModeSelect.value] || sshModeSelect.value,
+        rtcNames[webrtcModeSelect.value] || webrtcModeSelect.value
+      ];
+      if (allowInsecureInput.checked) bits.push('允许不安全证书');
+      bits.push(ipv6OffInput.checked ? 'IPv6 关闭' : 'IPv6 开启');
+      if (ruleCdnInput.checked) bits.push('规则走 CDN');
+      if (rules.length) bits.push('自定义 ' + rules.length + ' 条');
+      if (collected.errorCount) bits.push(collected.errorCount + ' 条规则有误，未写入链接');
+      summary.textContent = bits.join(' · ');
+      if (collected.errorCount) {
+        importBtn.href = '#';
+        downloadBtn.href = '#';
+        setActions(false);
+        return '';
+      }
+      downloadBtn.href = generated;
+      importBtn.href = 'sing-box://import-remote-profile?url=' + encodeURIComponent(generated) + '#sub2sfm';
+      setActions(true);
+      return generated;
+    }
+
+    [subUrlInput, presetSelect, sshModeSelect, webrtcModeSelect, allowInsecureInput, ipv6OffInput, ruleCdnInput].forEach((el) => {
+      el.addEventListener('input', updateUrl);
+      el.addEventListener('change', updateUrl);
+    });
+    addRuleBtn.addEventListener('click', addRuleRow);
+
+    function blockIfDisabled(event) {
+      if (event.currentTarget.getAttribute('aria-disabled') === 'true') {
+        event.preventDefault();
+      }
+    }
+    importBtn.addEventListener('click', blockIfDisabled);
+    downloadBtn.addEventListener('click', blockIfDisabled);
+
+    copyBtn.addEventListener('click', async () => {
+      const text = outputArea.textContent;
+      if (!text || text.includes('请输入')) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        copyBtn.textContent = '已复制';
+      } catch (err) {
+        const range = document.createRange();
+        range.selectNodeContents(outputArea);
+        const sel = getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        copyBtn.textContent = '请手动复制';
+      }
+      setTimeout(() => { copyBtn.textContent = '复制链接'; }, 1600);
+    });
+
+    addRuleRow();
+    updateUrl();
+  </script>
+</body>
+</html>

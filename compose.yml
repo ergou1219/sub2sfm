@@ -1,0 +1,13 @@
+services:
+  sub2sfm:
+    container_name: sub2sfm
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - TZ=Asia/Shanghai
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
