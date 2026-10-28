@@ -66,3 +66,7 @@ http://127.0.0.1:8080/sub?sub=https://airport.com/subscribe&preset=geek&ssh=dire
 - `cdn` / `rule_cdn`：规则集走 jsDelivr CDN 加速（避免 GitHub 直连网络受阻），传 `true` / `on` / `1` 开启。
 - `refresh` / `nocache`：强制刷新服务端内存订阅缓存，传 `true` / `on` / `1` 触发重新抓取。
 - `rules`：自定义分流规则，如 `domain:myvps.com=direct,port:2222=SSH出口,geosite:netflix=proxy,geoip:us=direct`。`geosite` / `geoip` 的名字对应 SagerNet 规则集。
+
+## 开源协议
+
+本项目基于 [MIT](LICENSE) 许可证开源。
