@@ -1,6 +1,7 @@
 services:
   sub2sfm:
     container_name: sub2sfm
+    image: ghcr.io/ergou1219/sub2sfm:latest
     build: .
     restart: unless-stopped
     ports:

@@ -26,9 +26,35 @@
    - 单二进制文件，内嵌原生 Web UI，零外部 CDN 依赖，支持一键复制 SFM 订阅链接与一键调起 SFM 导入。
    - 内置带 5 分钟 TTL 的内存订阅缓存，避免频繁转换对机场源站造成请求穿透。
 
-## 快速使用
+## 快速入门
 
-### 1. 运行服务
+### 方式一：Docker 一键运行（推荐，免配置环境）
+
+使用 GHCR 官方预编译多架构镜像（原生支持 macOS / Linux 的 AMD64 与 ARM64）：
+
+```bash
+docker run -d \
+  --name sub2sfm \
+  --restart unless-stopped \
+  -p 8080:8080 \
+  ghcr.io/ergou1219/sub2sfm:latest
+```
+
+或使用 Docker Compose 启动：
+```bash
+docker compose up -d
+```
+
+### 方式二：下载预编译单二进制运行
+
+前往 [Releases 页面](https://github.com/ergou1219/sub2sfm/releases) 下载对应系统平台的压缩包（macOS Apple Silicon / Intel、Linux x86_64 / arm64），解压后直接启动：
+```bash
+./sub2sfm -port 8080
+```
+
+### 方式三：源码编译运行（开发者）
+
+本地需要安装 Go 1.23+ 环境：
 ```bash
 go run main.go -port 8080
 ```
@@ -38,29 +64,17 @@ go build -o sub2sfm main.go
 ./sub2sfm -port 8080
 ```
 
-### 2. 容器化运行 (Docker & Docker Compose)
-
-**从 GHCR 直接拉取运行预编译镜像（推荐）：**
-```bash
-docker run -d --name sub2sfm -p 8080:8080 ghcr.io/ergou1219/sub2sfm:latest
-```
-
-**使用 Docker Compose 启动：**
-```bash
-docker compose up -d
-```
-
-**使用 Docker 原生命令构建并启动：**
-```bash
-docker build -t sub2sfm .
-docker run -d --name sub2sfm -p 8080:8080 -e PORT=8080 sub2sfm
-```
 > 提示：服务默认监听 `0.0.0.0:8080`，可通过设置 `HOST` 与 `PORT` 环境变量或启动参数自定义监听地址。
 
-### 3. 访问 Web 界面
-浏览器打开 `http://127.0.0.1:8080`，输入机场订阅链接即可生成 SFM 订阅。
+---
 
-### 4. API 参数说明
+## 3 步快速配置 SFM 订阅
+
+1. **打开 Web 界面**：浏览器访问 `http://127.0.0.1:8080`（VPS 部署请使用服务器公网 IP 或域名）。
+2. **生成订阅**：粘贴原机场订阅链接，分流预设推荐保持 `Geek (极客默认)`。
+3. **一键导入 SFM**：点击「一键导入 SFM」直接唤起 macOS 客户端；或点击「复制订阅」在 SFM 中手动添加配置。
+
+## API 参数说明
 订阅地址示例：
 ```
 http://127.0.0.1:8080/sub?sub=https://airport.com/subscribe&preset=geek&ssh=direct&rules=domain:myvps.com=direct,port:2222=SSH出口,geosite:netflix=proxy
