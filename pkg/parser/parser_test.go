@@ -346,3 +346,109 @@ proxies:
 		t.Errorf("expected SNI fallback to server 'vmess.custom.com', got %q", nodes[0].SNI)
 	}
 }
+
+func TestParseSingBoxJSON_FullConfig(t *testing.T) {
+	jsonData := `{
+  "outbounds": [
+    {"type": "selector", "tag": "节点选择"},
+    {"type": "urltest", "tag": "自动选择"},
+    {"type": "direct", "tag": "direct"},
+    {
+      "type": "vless",
+      "tag": "VLESS Reality",
+      "server": "vless.example.com",
+      "server_port": 443,
+      "uuid": "00000000-1111-2222-3333-444444444444",
+      "flow": "xtls-rprx-vision",
+      "tls": {
+        "enabled": true,
+        "insecure": false,
+        "server_name": "apple.com",
+        "reality": {
+          "enabled": true,
+          "public_key": "pubkey123",
+          "short_id": "shortid123"
+        }
+      }
+    },
+    {
+      "type": "vless",
+      "tag": "VLESS WS Array Header",
+      "server": "ws.example.com",
+      "server_port": 443,
+      "uuid": "00000000-1111-2222-3333-555555555555",
+      "tls": {
+        "enabled": true,
+        "server_name": "ws.example.com"
+      },
+      "transport": {
+        "type": "ws",
+        "path": "/ws-path",
+        "headers": {
+          "Host": ["ws.example.com"]
+        }
+      }
+    },
+    {
+      "type": "hysteria2",
+      "tag": "Hy2 Node",
+      "server": "hy2.example.com",
+      "server_port": 8443,
+      "password": "hy2secret",
+      "obfs": {
+        "type": "salamander",
+        "password": "obfspassword"
+      }
+    }
+  ]
+}`
+
+	nodes, err := ParseSingBoxJSON([]byte(jsonData))
+	if err != nil {
+		t.Fatalf("ParseSingBoxJSON failed: %v", err)
+	}
+	if len(nodes) != 3 {
+		t.Fatalf("expected 3 supported proxy nodes, got %d", len(nodes))
+	}
+
+	// VLESS Reality
+	n0 := nodes[0]
+	if n0.Type != "vless" || n0.Tag != "VLESS Reality" || n0.RealityPubKey != "pubkey123" || n0.RealityShortID != "shortid123" {
+		t.Errorf("unexpected node 0: %+v", n0)
+	}
+
+	// VLESS WS
+	n1 := nodes[1]
+	if n1.Type != "vless" || n1.Network != "ws" || n1.WSHeaders["Host"] != "ws.example.com" {
+		t.Errorf("unexpected node 1: %+v", n1)
+	}
+
+	// Hy2
+	n2 := nodes[2]
+	if n2.Type != "hysteria2" || n2.ObfsType != "salamander" || n2.ObfsPassword != "obfspassword" {
+		t.Errorf("unexpected node 2: %+v", n2)
+	}
+}
+
+func TestParseAutoDetection_SingBoxJSON(t *testing.T) {
+	jsonData := `{"outbounds":[{"type":"trojan","tag":"Trojan 01","server":"trojan.com","server_port":443,"password":"pwd"}]}`
+
+	// Direct JSON
+	nodes, err := Parse([]byte(jsonData))
+	if err != nil {
+		t.Fatalf("Parse direct Sing-box JSON failed: %v", err)
+	}
+	if len(nodes) != 1 || nodes[0].Tag != "Trojan 01" {
+		t.Errorf("unexpected direct JSON nodes: %+v", nodes)
+	}
+
+	// Base64-encoded JSON
+	b64 := base64.StdEncoding.EncodeToString([]byte(jsonData))
+	nodesB64, err := Parse([]byte(b64))
+	if err != nil {
+		t.Fatalf("Parse base64 Sing-box JSON failed: %v", err)
+	}
+	if len(nodesB64) != 1 || nodesB64[0].Tag != "Trojan 01" {
+		t.Errorf("unexpected base64 JSON nodes: %+v", nodesB64)
+	}
+}

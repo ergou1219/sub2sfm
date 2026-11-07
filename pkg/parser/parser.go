@@ -85,6 +85,14 @@ func Parse(content []byte) ([]*model.Node, error) {
 		}
 	}
 
+	// 3. 含有 outbounds 关键字或 JSON 数组/对象，可能是 Sing-box JSON
+	if strings.Contains(str, "\"outbounds\"") || bytes.HasPrefix(trimmed, []byte("{")) || bytes.HasPrefix(trimmed, []byte("[")) {
+		nodes, err := ParseSingBoxJSON(trimmed)
+		if err == nil && len(nodes) > 0 {
+			return nodes, nil
+		}
+	}
+
 	// 3. 尝试 Base64 解码
 	decoded, err := DecodeBase64(str)
 	if err == nil {
@@ -97,6 +105,12 @@ func Parse(content []byte) ([]*model.Node, error) {
 		}
 		if strings.Contains(decodedStr, "proxies:") {
 			nodes, err := ParseClashYAML(decoded)
+			if err == nil && len(nodes) > 0 {
+				return nodes, nil
+			}
+		}
+		if strings.Contains(decodedStr, "\"outbounds\"") || bytes.HasPrefix(decoded, []byte("{")) || bytes.HasPrefix(decoded, []byte("[")) {
+			nodes, err := ParseSingBoxJSON(decoded)
 			if err == nil && len(nodes) > 0 {
 				return nodes, nil
 			}

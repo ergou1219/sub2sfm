@@ -31,7 +31,8 @@ The service follows a pipe-and-filter conversion pipeline:
 [ Format Detection & Parsing ] (`pkg/parser/`)
   ├── Direct URIs: trojan://, vless://, hysteria2://, ss://
   ├── Clash/Meta YAML: "proxies:" token -> yaml.Unmarshal -> model.Node
-  ├── Base64 Decoded: padded, re-dispatched to URI or YAML parser
+  ├── Sing-box JSON: "outbounds" token -> json.Unmarshal -> model.Node
+  ├── Base64 Decoded: padded, re-dispatched to URI, YAML, or Sing-box JSON parser
   └── Output: []*model.Node + model.ConvertOptions
            │
            ▼
@@ -49,7 +50,7 @@ The service follows a pipe-and-filter conversion pipeline:
 ## Key Directories
 
 - `pkg/model/` — Core domain representations: `Node` (proxy node attributes) and `ConvertOptions` (converter query flags).
-- `pkg/parser/` — Subscription fetching, 5-minute thread-safe TTL cache, and protocol decoders (`parser.go`, `clash.go`, `trojan.go`, `cache.go`).
+- `pkg/parser/` — Subscription fetching, 5-minute thread-safe TTL cache, and protocol decoders (`parser.go`, `clash.go`, `singbox.go`, `trojan.go`, `cache.go`).
 - `pkg/builder/` — Sing-box configuration compiler and rule assemblers (`builder.go`, `tun.go`, `dns.go`, `outbounds.go`, `route.go`).
 - `pkg/server/` — HTTP routing, handler logic, query options parsing, and embedded Web UI (`handler.go`, `static/index.html`).
 - `.github/workflows/` — CI pipelines (`ci.yml`, `release.yml`) for lint, test, coverage, and multi-arch builds.
@@ -125,6 +126,7 @@ docker compose up -d --build
 | `pkg/parser/cache.go` | In-memory thread-safe 5-minute TTL subscription cache with cache-busting purge hooks. |
 | `pkg/parser/clash.go` | Parser converting Clash / Clash.Meta YAML proxies into `*model.Node` slices. |
 | `pkg/parser/trojan.go` | Parsers for `trojan://`, `vless://`, `hysteria2://`/`hy2://`, `ss://` URIs, and Base64 decoders. |
+| `pkg/parser/singbox.go` | Parser converting Sing-box JSON upstream configs (`outbounds`) into `*model.Node` slices. |
 | `pkg/builder/builder.go` | Root Sing-box configuration compiler uniting inbounds, DNS, outbounds, route, and experimental options. |
 | `pkg/builder/tun.go` | TUN and Mixed inbounds setup (`stack: mixed`, `mtu: 1500`, port 2080). |
 | `pkg/builder/dns.go` | Sing-box 1.12+ DNS hierarchy, anti-leak rule sequencing, and Type 65 blocking. |
