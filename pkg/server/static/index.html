@@ -418,6 +418,17 @@
                 <span class="switch-track"></span>
               </label>
             </div>
+            <div class="toggle">
+              <label class="toggle-title" for="failoverToggle">存活节点容灾</label>
+              <button type="button" class="tip-btn" aria-label="节点故障超时时，毫秒级打断并自动转移至存活可用节点。">
+                <span aria-hidden="true">?</span>
+                <span class="tip-text" aria-hidden="true">节点故障超时时，毫秒级打断并自动转移至存活可用节点。</span>
+              </button>
+              <label class="switch" for="failoverToggle">
+                <input type="checkbox" id="failoverToggle" />
+                <span class="switch-track"></span>
+              </label>
+            </div>
           </div>
         </section>
 
@@ -444,6 +455,7 @@
     const allowInsecureInput = document.getElementById('allowInsecure');
     const ipv6OffInput = document.getElementById('ipv6Off');
     const ruleCdnInput = document.getElementById('ruleCdn');
+    const failoverToggle = document.getElementById('failoverToggle');
     const outputArea = document.getElementById('outputUrl');
     const summary = document.getElementById('summary');
     const copyBtn = document.getElementById('copyBtn');
@@ -659,6 +671,7 @@
       if (allowInsecureInput.checked) params.set('insecure', 'true');
       params.set('ipv6', ipv6OffInput.checked ? 'off' : 'on');
       if (ruleCdnInput.checked) params.set('cdn', 'true');
+      if (failoverToggle.checked) params.set('failover', 'true');
 
       const generated = window.location.origin + '/sub?' + params.toString();
       outputArea.textContent = generated;
@@ -671,6 +684,7 @@
       if (allowInsecureInput.checked) bits.push('允许不安全证书');
       bits.push(ipv6OffInput.checked ? 'IPv6 关闭' : 'IPv6 开启');
       if (ruleCdnInput.checked) bits.push('规则走 CDN');
+      if (failoverToggle.checked) bits.push('存活节点容灾');
       if (rules.length) bits.push('自定义 ' + rules.length + ' 条');
       if (collected.errorCount) bits.push(collected.errorCount + ' 条规则有误，未写入链接');
       summary.textContent = bits.join(' · ');
@@ -686,7 +700,7 @@
       return generated;
     }
 
-    [subUrlInput, presetSelect, sshModeSelect, webrtcModeSelect, allowInsecureInput, ipv6OffInput, ruleCdnInput].forEach((el) => {
+    [subUrlInput, presetSelect, sshModeSelect, webrtcModeSelect, allowInsecureInput, ipv6OffInput, ruleCdnInput, failoverToggle].forEach((el) => {
       el.addEventListener('input', updateUrl);
       el.addEventListener('change', updateUrl);
     });

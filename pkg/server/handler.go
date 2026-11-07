@@ -130,6 +130,7 @@ func parseOptions(r *http.Request) model.ConvertOptions {
 		AllowInsecure: isTrueParam(q.Get("insecure")) || isTrueParam(q.Get("allow_insecure")) || isTrueParam(q.Get("skip_cert_verify")),
 		EnableIPv6:    isTrueParam(q.Get("ipv6")),
 		RuleCDN:       isTrueParam(q.Get("cdn")) || isTrueParam(q.Get("rule_cdn")),
+		AutoFailover:  isTrueParam(q.Get("failover")) || isTrueParam(q.Get("health")) || isTrueParam(q.Get("autofailover")),
 	}
 }
 

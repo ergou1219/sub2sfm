@@ -36,4 +36,5 @@ type ConvertOptions struct {
 	AllowInsecure bool   // 允许不安全/已过期 TLS 证书
 	EnableIPv6    bool   // 启用 TUN/Fake-IP 双栈，默认关闭以规避无全局 IPv6 时的连接重置
 	RuleCDN       bool   // 启用 jsDelivr CDN 加速规则集下载（规避 GitHub 无法访问问题）
+	AutoFailover  bool   // 启用存活节点高频探测与秒级故障转移（缩短测速间隔、打断僵死连接）
 }

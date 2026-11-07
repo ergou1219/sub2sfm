@@ -80,14 +80,22 @@ func BuildOutbounds(nodes []*model.Node, opts model.ConvertOptions) []map[string
 	})
 
 	// 2. 自动选择 (URLTest 自动优选)
-	outbounds = append(outbounds, map[string]any{
+	autoTest := map[string]any{
 		"type":      "urltest",
 		"tag":       "自动选择",
 		"outbounds": nodeTags,
 		"url":       "https://www.gstatic.com/generate_204",
 		"interval":  "3m",
 		"tolerance": 50,
-	})
+	}
+	if opts.AutoFailover {
+		autoTest["url"] = "https://cp.cloudflare.com/generate_204"
+		autoTest["interval"] = "30s"
+		autoTest["tolerance"] = 15
+		autoTest["interrupt_exist_connections"] = true
+		autoTest["idle_timeout"] = "30m"
+	}
+	outbounds = append(outbounds, autoTest)
 
 	// 3. SSH 出口策略组 (彻底解决 SSH 断连问题)
 	sshDefault := "全局直连"

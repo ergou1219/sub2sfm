@@ -900,3 +900,68 @@ func TestBuildSingBoxConfig_RuleCDN(t *testing.T) {
 		})
 	}
 }
+
+func TestBuildSingBoxConfig_AutoFailover(t *testing.T) {
+	findAutoSelect := func(configJSON []byte) map[string]any {
+		var root map[string]any
+		if err := json.Unmarshal(configJSON, &root); err != nil {
+			t.Fatalf("failed to unmarshal generated json: %v", err)
+		}
+		outbounds, ok := root["outbounds"].([]any)
+		if !ok {
+			t.Fatalf("outbounds missing")
+		}
+		for _, oAny := range outbounds {
+			o := oAny.(map[string]any)
+			if o["tag"] == "自动选择" {
+				return o
+			}
+		}
+		t.Fatalf("自动选择 outbound not found")
+		return nil
+	}
+
+	// 1. AutoFailover == false (默认)
+	cfgDefault, err := BuildSingBoxConfig(sampleNodes(), model.ConvertOptions{AutoFailover: false})
+	if err != nil {
+		t.Fatalf("BuildSingBoxConfig failed: %v", err)
+	}
+	autoDefault := findAutoSelect(cfgDefault)
+	if autoDefault["url"] != "https://www.gstatic.com/generate_204" {
+		t.Errorf("expected default url 'https://www.gstatic.com/generate_204', got %v", autoDefault["url"])
+	}
+	if autoDefault["interval"] != "3m" {
+		t.Errorf("expected default interval '3m', got %v", autoDefault["interval"])
+	}
+	if autoDefault["tolerance"] != float64(50) {
+		t.Errorf("expected default tolerance 50, got %v", autoDefault["tolerance"])
+	}
+	if _, exists := autoDefault["interrupt_exist_connections"]; exists {
+		t.Errorf("expected interrupt_exist_connections to be omitted by default, got %v", autoDefault["interrupt_exist_connections"])
+	}
+	if _, exists := autoDefault["idle_timeout"]; exists {
+		t.Errorf("expected idle_timeout to be omitted by default, got %v", autoDefault["idle_timeout"])
+	}
+
+	// 2. AutoFailover == true (高可用容灾模式)
+	cfgFailover, err := BuildSingBoxConfig(sampleNodes(), model.ConvertOptions{AutoFailover: true})
+	if err != nil {
+		t.Fatalf("BuildSingBoxConfig failed: %v", err)
+	}
+	autoFailover := findAutoSelect(cfgFailover)
+	if autoFailover["url"] != "https://cp.cloudflare.com/generate_204" {
+		t.Errorf("expected failover url 'https://cp.cloudflare.com/generate_204', got %v", autoFailover["url"])
+	}
+	if autoFailover["interval"] != "30s" {
+		t.Errorf("expected failover interval '30s', got %v", autoFailover["interval"])
+	}
+	if autoFailover["tolerance"] != float64(15) {
+		t.Errorf("expected failover tolerance 15, got %v", autoFailover["tolerance"])
+	}
+	if autoFailover["interrupt_exist_connections"] != true {
+		t.Errorf("expected failover interrupt_exist_connections true, got %v", autoFailover["interrupt_exist_connections"])
+	}
+	if autoFailover["idle_timeout"] != "30m" {
+		t.Errorf("expected failover idle_timeout '30m', got %v", autoFailover["idle_timeout"])
+	}
+}

@@ -36,6 +36,12 @@ func TestHandler_IndexAndHealth(t *testing.T) {
 	if !strings.Contains(rec.Body.String(), "规则走 CDN") {
 		t.Errorf("index html does not contain 规则走 CDN label")
 	}
+	if !strings.Contains(rec.Body.String(), `id="failoverToggle"`) {
+		t.Errorf("index html does not contain failoverToggle checkbox")
+	}
+	if !strings.Contains(rec.Body.String(), "存活节点容灾") {
+		t.Errorf("index html does not contain 存活节点容灾 label")
+	}
 
 	// 2. Test /health
 	req = httptest.NewRequest(http.MethodGet, "/health", nil)
@@ -289,4 +295,49 @@ func TestHandler_CDNParam(t *testing.T) {
 	checkCDN(base+"&cdn=true", true)
 	checkCDN(base+"&cdn=1", true)
 	checkCDN(base+"&rule_cdn=1", true)
+}
+
+func TestHandler_FailoverParams(t *testing.T) {
+	h := NewHandler(nil)
+	mux := h.Router()
+	trojanURI := "trojan://testpwd@hk.test.com:443#HongKongTest"
+
+	checkFailover := func(u string, expected bool) {
+		req := httptest.NewRequest(http.MethodGet, u, nil)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("request to %s failed: %d", u, rec.Code)
+		}
+		var root map[string]any
+		if err := json.Unmarshal(rec.Body.Bytes(), &root); err != nil {
+			t.Fatalf("unmarshal error: %v", err)
+		}
+		outbounds := root["outbounds"].([]any)
+		var autoSelect map[string]any
+		for _, oAny := range outbounds {
+			o := oAny.(map[string]any)
+			if o["tag"] == "自动选择" {
+				autoSelect = o
+				break
+			}
+		}
+		if autoSelect == nil {
+			t.Fatalf("自动选择 not found for %s", u)
+		}
+		if expected {
+			if autoSelect["interval"] != "30s" || autoSelect["interrupt_exist_connections"] != true {
+				t.Errorf("expected failover urltest for %s, got %v", u, autoSelect)
+			}
+		} else {
+			if autoSelect["interval"] != "3m" || autoSelect["interrupt_exist_connections"] != nil {
+				t.Errorf("expected default urltest for %s, got %v", u, autoSelect)
+			}
+		}
+	}
+
+	checkFailover("/sub?sub="+url.QueryEscape(trojanURI), false)
+	checkFailover("/sub?sub="+url.QueryEscape(trojanURI)+"&failover=1", true)
+	checkFailover("/sub?sub="+url.QueryEscape(trojanURI)+"&health=true", true)
+	checkFailover("/sub?sub="+url.QueryEscape(trojanURI)+"&autofailover=on", true)
 }
